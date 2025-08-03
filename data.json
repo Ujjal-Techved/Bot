@@ -1,0 +1,26 @@
+[
+  {
+    "question": "How many CRs were delivered last quarter?",
+    "sql": "SELECT COUNT(RequestID) \nFROM ProjectRequest \nWHERE RequestStatus = 'Completed' \nAND CRNRStatus = 'Delivered' \nAND RequestDate >= DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETDATE()) - 1, 0) \nAND RequestDate < DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETDATE()), 0)"
+  },
+  {
+    "question": "last quarter?",
+    "sql": "SELECT * FROM ProjectRequest WHERE RequestDate >= DATEADD(quarter, DATEDIFF(quarter, 0, GETDATE()) - 1, 0) AND RequestDate < DATEADD(quarter, DATEDIFF(quarter, 0, GETDATE()), 0)"
+  },
+  {
+    "question": "give me total number of Employee Comments",
+    "sql": "SELECT COUNT(*) FROM EmpComments;"
+  },
+  {
+    "question": "hi",
+    "sql": "SELECT * FROM ProjectRequest WHERE Brand = 'hi'"
+  },
+  {
+    "question": "How many CR/NR have been absorbed?",
+    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE CRNRStatus = 'absorbed'"
+  },
+  {
+    "question": "Have we implemented a similar CR before?",
+    "sql": "SELECT * \nFROM ProjectRequest \nWHERE CRNRStatus = 'CR'"
+  }
+]
