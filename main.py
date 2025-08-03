@@ -5,7 +5,9 @@ from db import save_query, load_queries, run_query
 from nlp import is_similar
 import logging
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -19,7 +21,10 @@ logger = logging.getLogger(__name__)
 
 class QueryInput(BaseModel):
     question: str
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
+@app.get("/")
+def serve_index():
+    return FileResponse(os.path.join("static", "index.html"))
 @app.post("/query")
 async def generate_sql_endpoint(query_input: QueryInput):
     try:
@@ -30,7 +35,7 @@ async def generate_sql_endpoint(query_input: QueryInput):
             return {
                 "query": query_input.question,
                 "sql": None,
-                "result": "Hi there! I can help you generate SQL queries. Please ask a question."
+                "result": "Hi there! I can help you generate Reports. Please ask a question."
             }
         # Load existing queries
         existing_queries = load_queries()

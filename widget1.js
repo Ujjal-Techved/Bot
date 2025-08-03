@@ -37,28 +37,38 @@
   popup.style.padding = '20px';
 
   popup.innerHTML = `
-    <div id="bot-app" style="display: flex; flex-direction: column; height: 100%;">
-      <form id="query-form">
-        <label for="question">Ask a question:</label>
-        <div style="display: flex; gap: 8px;">
-          <input type="text" id="question" placeholder="e.g., How many CRs were delivered?" required style="flex:1; box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
-          <button type="button" id="voice-btn" title="Speak your question" style="box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;"><i class="fas fa-microphone"></i></button>
-        </div>
-        <button type="submit" style="margin-top:10px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 5px; border: none; background-color: #42b883; color: white; cursor: pointer;">Ask</button>
-      </form>
-      <div id="loading" style="display: none; font-style: italic;">Loading...</div>
-      <div id="result" style="
-        margin-top: 20px;
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        scroll-behavior: smooth;
-        border-top: 1px solid #eee;
-        padding-top: 10px;
-      "></div>
+    <div id="bot-app" style="display: flex; flex-direction: column; height: 80vh;">
+  <div id="loading" style="display: none; font-style: italic;">Loading...</div>
+
+  <!-- Scrollable Result Area -->
+  <div id="result" style="
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+    border-top: 1px solid #eee;
+    padding: 10px;
+  "></div>
+
+  <!-- Fixed Form Area -->
+  <form id="query-form" style="padding: 10px; border-top: 1px solid #ccc; background-color: #f9f9f9;">
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="question" placeholder="e.g., How many CRs were delivered?" required
+        style="flex:1; box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
+      <button type="button" id="voice-btn" title="Speak your question"
+        style="box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+        <i class="fas fa-microphone"></i>
+      </button>
     </div>
+    <button type="submit"
+      style="margin-top:10px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 5px; border: none; background-color: #42b883; color: white; cursor: pointer;">
+      Ask
+    </button>
+  </form>
+</div>
+
   `;
 
   document.body.appendChild(popup);

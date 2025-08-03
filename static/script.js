@@ -169,8 +169,13 @@
 
         const data = await res.json();
         const output = data.result;
-        appendChatBubble('bot', output);
-        saveQA(question, output);
+        if (output === null || output === undefined || output === '' ||
+              (Array.isArray(output) && output.length === 0)) {
+            appendChatBubble('bot', 'Sorry, no results were found for your query.');
+          } else {
+            appendChatBubble('bot', output);
+            saveQA(question, output);
+        }
       } catch (err) {
         appendChatBubble('bot', 'Error: ' + err.message);
       } finally {
