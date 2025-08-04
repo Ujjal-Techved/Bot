@@ -22,5 +22,13 @@
   {
     "question": "Have we implemented a similar CR before?",
     "sql": "SELECT * \nFROM ProjectRequest \nWHERE CRNRStatus = 'CR'"
+  },
+  {
+    "question": "What\u2019s our average CR turnaround time?",
+    "sql": "SELECT AVG(DATEDIFF(day, ReqRecvDate, CRNRStatusUpdatedBY)) AS AvgTurnaroundTime FROM ProjectRequest WHERE CRNRStatusUpdatedBY IS NOT NULL"
+  },
+  {
+    "question": "How many CR/NR are approved with same allocated hrs?",
+    "sql": "SELECT COUNT(*) \nFROM ProjectRequest \nWHERE CRNRStatus = 'Approved' \nAND AllocateHours IN (\n    SELECT AllocateHours \n    FROM ProjectRequest \n    GROUP BY AllocateHours \n    HAVING COUNT(*) > 1\n)"
   }
 ]

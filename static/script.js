@@ -26,18 +26,16 @@
   popup.style.bottom = '80px';
   popup.style.right = '20px';
   popup.style.width = '350px';
-  popup.style.maxHeight = '500px';
-  popup.style.overflow = 'auto';
+  popup.style.maxHeight = '400px';
   popup.style.zIndex = '9998';
   popup.style.background = 'white';
   popup.style.border = '1px solid #ccc';
   popup.style.borderRadius = '8px';
   popup.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
   popup.style.display = 'none';
-  popup.style.padding = '20px';
+  popup.style.padding = '0';
 
-  popup.innerHTML = `
-    <div id="bot-app" style="display: flex; flex-direction: column; height: 80vh;">
+  popup.innerHTML = `<div id="bot-app" style="display: flex; flex-direction: column; height: 80vh;">
   <div id="loading" style="display: none; font-style: italic;">Loading...</div>
 
   <!-- Scrollable Result Area -->
@@ -68,8 +66,7 @@
     </button>
   </form>
 </div>
-
-  `;
+`;
 
   document.body.appendChild(popup);
 
@@ -77,7 +74,11 @@
   widgetBtn.addEventListener('click', () => {
     popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
   });
-
+  function scrollToBottom() {
+    const result = document.getElementById("result");
+    console.log("scroll called")
+    result.scrollTop = result.scrollHeight;
+  }
   // Behavior script
   setTimeout(() => {
     const form = popup.querySelector('#query-form');
@@ -130,11 +131,7 @@
       }
 
       result.appendChild(bubble);
-
-      // 🔽 Ensure scroll happens after rendering
-      setTimeout(() => {
-        result.scrollTop = result.scrollHeight;
-      }, 0);
+      scrollToBottom();
     }
 
     function renderHistory() {
@@ -143,9 +140,7 @@
         appendChatBubble('user', question);
         appendChatBubble('bot', answer);
       });
-        setTimeout(() => {
-        result.scrollTop = result.scrollHeight;
-      }, 0);
+      scrollToBottom();
     }
 
     renderHistory();
@@ -161,7 +156,7 @@
       input.value = '';
 
       try {
-        const res = await fetch('http://localhost:8001/query', {
+        const res = await fetch('https://samvaadneu.techvedconsulting.com/tvd-bot/query', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ question: question })

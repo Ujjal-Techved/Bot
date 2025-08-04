@@ -31,12 +31,22 @@ async def generate_sql_endpoint(query_input: QueryInput):
 
         question = query_input.question
         logger.info("Generating SQL for question: %s", question)
-        if question in ["hi", "hello", "hey", "how are you", "help", 'thanks', 'thank you', 'thx', "how are you?", "what's up?"]:
+        casual_keywords = [
+            "hi", "hello", "hey", "how are you", "hay how r u", "help",
+            "thanks", "thank you", "thx", "what's up", "are you real"
+        ]
+        report_keywords = [
+            "report", "data", "show", "list", "count", "how many", "number of",
+            "generate", "summary", "chart", "table", "deliver", "created", "closed"
+        ]
+        q = question.lower().strip()
+        if q in casual_keywords:
             return {
                 "query": query_input.question,
                 "sql": None,
                 "result": "Hi there! I can help you generate Reports. Please ask a question."
             }
+
         # Load existing queries
         existing_queries = load_queries()
         logger.info("Existing queries: %s", existing_queries)
