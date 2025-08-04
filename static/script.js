@@ -1,4 +1,5 @@
 (function () {
+ // Add FontAwesome
   const faLink = document.createElement("link");
   faLink.rel = "stylesheet";
   faLink.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css";
@@ -26,47 +27,49 @@
   popup.style.bottom = '80px';
   popup.style.right = '20px';
   popup.style.width = '350px';
-  popup.style.maxHeight = '400px';
+  popup.style.height = '500px'; // fixed height
   popup.style.zIndex = '9998';
   popup.style.background = 'white';
   popup.style.border = '1px solid #ccc';
   popup.style.borderRadius = '8px';
   popup.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
   popup.style.display = 'none';
-  popup.style.padding = '0';
+  popup.style.overflow = 'hidden';
+  popup.style.display = 'flex';
+  popup.style.flexDirection = 'column';
 
-  popup.innerHTML = `<div id="bot-app" style="display: flex; flex-direction: column; height: 80vh;">
-  <div id="loading" style="display: none; font-style: italic;">Loading...</div>
+  popup.innerHTML = `
+  <div id="bot-app" style="display: flex; flex-direction: column; height: 100%;">
+    <div id="loading" style="display: none; font-style: italic; padding: 10px;">Loading...</div>
 
-  <!-- Scrollable Result Area -->
-  <div id="result" style="
-    flex: 1;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    scroll-behavior: smooth;
-    border-top: 1px solid #eee;
-    padding: 10px;
-  "></div>
+    <!-- Scrollable Result Area -->
+    <div id="result" style="
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
+      padding: 10px;
+    "></div>
 
-  <!-- Fixed Form Area -->
-  <form id="query-form" style="padding: 10px; border-top: 1px solid #ccc; background-color: #f9f9f9;">
-    <div style="display: flex; gap: 8px;">
-      <input type="text" id="question" placeholder="e.g., How many CRs were delivered?" required
-        style="flex:1; box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
-      <button type="button" id="voice-btn" title="Speak your question"
-        style="box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
-        <i class="fas fa-microphone"></i>
+    <!-- Fixed Form Area -->
+    <form id="query-form" style="padding: 10px; border-top: 1px solid #ccc; background-color: #f9f9f9;">
+      <div style="display: flex; gap: 8px;">
+        <input type="text" id="question" placeholder="e.g., How many CRs were delivered?" required
+          style="flex:1; box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;" />
+        <button type="button" id="voice-btn" title="Speak your question"
+          style="box-sizing: border-box; padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+          <i class="fas fa-microphone"></i>
+        </button>
+      </div>
+      <button type="submit"
+        style="margin-top:10px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 5px; border: none; background-color: #42b883; color: white; cursor: pointer;">
+        Ask
       </button>
-    </div>
-    <button type="submit"
-      style="margin-top:10px; width: 100%; box-sizing: border-box; padding: 10px; border-radius: 5px; border: none; background-color: #42b883; color: white; cursor: pointer;">
-      Ask
-    </button>
-  </form>
-</div>
-`;
+    </form>
+  </div>
+  `;
 
   document.body.appendChild(popup);
 
