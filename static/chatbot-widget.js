@@ -21,12 +21,13 @@
         }
     };
 
+
     // FAQ data
     const FAQ_DATA = [
-        { id: '1', question: 'Can I redeem my FB before the original term?' },
-        { id: '2', question: 'How do I pay my Credit card bill?' },
-        { id: '3', question: 'How can I get my Account Statement?' },
-        { id: '4', question: 'What is the tenure of Fixed Deposit?' }
+        { id: '1', question: 'Which CRs/NRs should I prioritize this week?' },
+        { id: '2', question: 'Which CR/NR is pending for approval greater then 15 days?' },
+        { id: '3', question: 'Show me all NRs from SOL?' },
+        { id: '4', question: 'How many CRs were delivered last quarter?' }
     ];
 
     class IRISChatbot {
@@ -37,6 +38,8 @@
             this.isListening = false;
             this.container = null;
             this.widget = null;
+            this.isFullExpanded = false;
+
             
             this.init();
         }
@@ -161,7 +164,7 @@
                 }
 
                 .iris-header .description {
-                    font-size: 14px;
+                    font-size: 16px;
                     opacity: 0.9;
                     margin: 4px 0;
                 }
@@ -390,6 +393,32 @@
                         font-size: 20px;
                         margin-bottom: 12px;
                     }
+                    .iris-widget-container.expanded-mode {
+                        width: 100vw !important;
+                        height: 100vh !important;
+                        max-width: 100vw !important;
+                        max-height: 100vh !important;
+                        border-radius: 0 !important;
+                        bottom: 0 !important;
+                        right: 0 !important;
+                        left: 0 !important;
+                        top: 0 !important;
+                    }
+                    
+                    .iris-expand-btn {
+                        background: none;
+                        border: none;
+                        color: white;
+                        cursor: pointer;
+                        padding: 4px;
+                        border-radius: 4px;
+                        transition: background-color 0.2s;
+                        margin-left: 8px;
+                    }
+                    
+                    .iris-expand-btn:hover {
+                        background-color: rgba(255, 255, 255, 0.1);
+                    }
                 }
             `;
             document.head.appendChild(style);
@@ -417,6 +446,12 @@
                             <div class="description">How may I help you?</div>
                         </div>
                         ${this.config.position !== 'inline' ? `
+                        <button class="iris-expand-btn" id="iris-expand" title="Toggle Fullscreen">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4h6M4 4v6M20 20h-6M20 20v-6M4 20h6M4 20v-6M20 4h-6M20 4v6" />
+                            </svg>
+                        </button>
                         <button class="iris-close-btn" id="iris-close">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -458,7 +493,7 @@
                             </button>
                         </div>
                         <div class="iris-powered-by">
-                            Powered by <span class="brand">HOLA.AI</span>
+                            Powered by <span class="brand">THEHOLA.AI</span>
                         </div>
                     </div>
                 </div>
@@ -493,7 +528,10 @@
             if (closeBtn) {
                 closeBtn.addEventListener('click', () => this.closeWidget());
             }
-
+            const expandBtn = this.container.querySelector('#iris-expand');
+            if (expandBtn){
+                expandBtn.addEventListener('click', () => this.toggleExpand());
+            }
             // Send button
             const sendBtn = this.container.querySelector('#iris-send');
             sendBtn.addEventListener('click', () => this.sendMessage());
@@ -696,6 +734,16 @@
             const input = this.container.querySelector('#iris-input');
             input.value = message;
             this.sendMessage();
+        }
+
+        toggleExpand() {
+            console.log("Clicked")
+            this.isFullExpanded = !this.isFullExpanded;
+            if (this.isFullExpanded) {
+                this.widget.classList.add('expanded-mode');
+            } else {
+                this.widget.classList.remove('expanded-mode');
+            }
         }
 
         destroy() {
