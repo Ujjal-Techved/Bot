@@ -1,26 +1,27 @@
-import os
-import glob
 import pandas as pd
-from langchain.llms import Ollama
+import glob
+from langchain.llms import GPT4All
 from langchain.chains import RetrievalQA
 from langchain.vectorstores import Chroma
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.docstore.document import Document
+import os
 
 # ==== CONFIG ====
 DATA_FOLDER = "./data"  # folder containing your CSV files
-OLLAMA_MODEL = "gemma3:4b" # or "llama3", "gemma", etc.
+MODEL_PATH = "./models/ggml-gpt4all-j-v1.3-groovy.bin"  # model path
 # =================
 
-# --- 1. Load CSV Data into Documents ---
+# Load all CSV files from folder
 docs = []
 csv_files = glob.glob(os.path.join(DATA_FOLDER, "*.csv"))
 
 if not csv_files:
-    print("❌ No CSV files found in:", DATA_FOLDER)
+    print("❌ No CSV files found in folder:", DATA_FOLDER)
     exit()
 
 print(f"Found {len(csv_files)} CSV files. Loading data...")
+
 for file_path in csv_files:
     df = pd.read_csv(file_path)
     for _, row in df.iterrows():
@@ -29,22 +30,26 @@ for file_path in csv_files:
 
 print(f"✅ Loaded {len(docs)} rows from {len(csv_files)} CSV files.")
 
-# --- 2. Create Vector Store for CSV Chat ---
+# Create embeddings
+print("Creating embeddings...")
 embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+
+# Create vector store
 db = Chroma.from_documents(docs, embeddings)
 retriever = db.as_retriever()
 
-# --- 3. LangChain LLM for CSV Q&A ---
-llm_csv = Ollama(model=OLLAMA_MODEL)
-qa_csv = RetrievalQA.from_chain_type(llm=llm_csv, retriever=retriever)
+# Load GPT4All model
+print("Loading GPT4All model...")
+llm = GPT4All(model=MODEL_PATH, verbose=False)
 
-# --- 4. Chat Loop ---
-print("\n✅ CSV Chatbot ready! Type 'exit' to quit.\n")
+# Create QA chain
+qa = RetrievalQA.from_chain_type(llm=llm, retriever=retriever)
 
+# Chat loop
+print("\n✅ Chatbot is ready! Type 'exit' to quit.\n")
 while True:
-    query = input("Ask a question: ").strip()
+    query = input("Ask a question: ")
     if query.lower() in ["exit", "quit"]:
         break
-    result = qa_csv.invoke({"query": query})
-    answer = result["result"]
+    answer = qa.run(query)
     print(f"\nAnswer: {answer}\n")

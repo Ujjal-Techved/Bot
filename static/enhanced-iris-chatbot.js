@@ -9,7 +9,7 @@
     'use strict';
 
     // Configuration
-    const API_ENDPOINT = "https://samvaadneu.techvedconsulting.com/tvd-bot/query";
+    const API_ENDPOINT = "http://localhost:8000/chat";
     const COOKIE_KEY = "tvd_bot_history";
     const MAX_HISTORY = 10;
 
@@ -1280,13 +1280,13 @@
                 }
 
                 const data = await response.json();
-                const output = data.result;
+                const output = data.answer;
 
                 if (!output || (Array.isArray(output) && output.length === 0)) {
                     this.addMessage('Sorry, no results were found for your query.', 'bot');
                 } else {
                     if (typeof output === 'string' || typeof output === 'number') {
-                        this.addMessage(String(output), 'bot');
+                        this.addMessage(String(output), 'html');
                     } else if (Array.isArray(output)) {
                         this.addTableMessage(output);
                     } else {

@@ -1,7 +1,8 @@
 import json
 import os
 import pyodbc
-FILE = "data.json"
+QUERIES_FILE = "data.json"
+from nlp import is_similar
 
 def get_connection():
     return pyodbc.connect(
@@ -26,21 +27,39 @@ def run_query(sql):
         cursor.close()
         conn.close()
 
-def load_queries():
-    if not os.path.exists(FILE):
-        return []
-    try:
-        with open(FILE, "r") as f:
-            content = f.read().strip()
-            if not content:
-                return []
-            return json.loads(content)
-    except json.JSONDecodeError:
-        print("Warning: JSON file is empty or malformed. Returning empty list.")
-        return []
 
-def save_query(question, sql):
+def load_queries():
+    """Load previously saved queries from file."""
+    if not os.path.exists(QUERIES_FILE):
+        return []
+    with open(QUERIES_FILE, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []  # Return empty if file is corrupted
+
+def save_query(question, sql, intent=None, params=None):
+    """
+    Save a new query mapping if it doesn't already exist.
+    Stores intent and optional params.
+    """
     queries = load_queries()
-    queries.append({"question": question, "sql": sql})
-    with open(FILE, "w") as f:
-        json.dump(queries, f, indent=2)
+
+    # Prevent duplicates
+    for entry in queries:
+        if is_similar(question, entry["question"]):
+            return False  # Already exists
+
+    new_entry = {
+        "question": question,
+        "sql": sql,
+        "intent": intent if intent else None,
+        "params": params if params else {}
+    }
+
+    queries.append(new_entry)
+
+    with open(QUERIES_FILE, "w", encoding="utf-8") as f:
+        json.dump(queries, f, indent=2, ensure_ascii=False)
+
+    return True

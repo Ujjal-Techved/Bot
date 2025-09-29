@@ -1,34 +1,155 @@
 [
   {
-    "question": "How many CRs were delivered last quarter?",
-    "sql": "SELECT COUNT(RequestID) \nFROM ProjectRequest \nWHERE RequestStatus = 'Completed' \nAND CRNRStatus = 'Delivered' \nAND RequestDate >= DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETDATE()) - 1, 0) \nAND RequestDate < DATEADD(QUARTER, DATEDIFF(QUARTER, 0, GETDATE()), 0)"
+    "intent": "total_allocated_hours_per_brand",
+    "question": "Total Allocated Hours per Brand",
+    "parameters": {},
+    "sql": "SELECT Brand, SUM(AllocateHours) AS TotalAllocatedHours FROM ProjectRequest GROUP BY Brand ORDER BY TotalAllocatedHours DESC;"
   },
   {
-    "question": "last quarter?",
-    "sql": "SELECT * FROM ProjectRequest WHERE RequestDate >= DATEADD(quarter, DATEDIFF(quarter, 0, GETDATE()) - 1, 0) AND RequestDate < DATEADD(quarter, DATEDIFF(quarter, 0, GETDATE()), 0)"
+    "intent": "count_of_requests_by_status",
+    "question": "Count of status by CRNRStatus",
+    "parameters": {},
+    "sql": "SELECT WorkStatus, Brand, COUNT(*) AS TotalRequests FROM ProjectRequest GROUP BY WorkStatus, Brand ORDER BY TotalRequests DESC;"
   },
   {
-    "question": "give me total number of Employee Comments",
-    "sql": "SELECT COUNT(*) FROM EmpComments;"
+    "intent": "total_hours_allocated_vs_estimated_per_project",
+    "question": "Total Hours Allocated vs. Estimated per Project",
+    "parameters": {},
+    "sql": "SELECT Brand, SUM(AllocateHours) AS TotalAllocated, SUM(EstimateHours) AS TotalEstimated FROM ProjectRequest GROUP BY Brand ORDER BY Brand;"
+  },{
+    "intent": "find_requests_still_pending",
+    "question": "Find Requests Still Pending",
+    "parameters": {},
+    "sql": "SELECT RequestCode, Brand, Module, WorkStatus FROM ProjectRequest WHERE WorkStatus like '%Pending%';"
   },
   {
-    "question": "hi",
-    "sql": "SELECT * FROM ProjectRequest WHERE Brand = 'hi'"
+    "intent": "requests_by_workType",
+    "question": "Requests by WorkType",
+    "parameters": {},
+    "sql": "SELECT Worktype, Brand, COUNT(*) AS TotalRequests, SUM(AllocateHours) AS TotalHours FROM ProjectRequest GROUP BY Worktype, Brand ORDER BY TotalRequests DESC;"
+  }, {
+    "intent": "top_10_modules_with_maximum_allocated_hours",
+    "question": "Top 10 Modules with Maximum Allocated Hours",
+    "parameters": {},
+    "sql": "SELECT TOP 10 Module,Brand,SUM(AllocateHours) AS TotalAllocated FROM ProjectRequest GROUP BY Module, Brand ORDER BY TotalAllocated DESC;"
+  },{
+    "intent": "average_hours_taken_per_request_type",
+    "question": "Average Hours Taken per Request Type",
+    "parameters": {},
+    "sql": "SELECT RequestType, Brand, AVG(AllocateHours) AS AvgAllocatedHours FROM ProjectRequest GROUP BY RequestType, Brand Order By AvgAllocatedHours DESC;"
   },
   {
-    "question": "How many CR/NR have been absorbed?",
-    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE CRNRStatus = 'absorbed'"
+    "intent": "requests_raised_per_month",
+    "question": "Requests Raised per Month",
+    "parameters": {},
+    "sql": "SELECT YEAR(ReqCreateDate) AS Year, MONTH(ReqCreateDate) AS Month, COUNT(*) AS TotalRequests FROM ProjectRequest GROUP BY YEAR(ReqCreateDate), MONTH(ReqCreateDate) ORDER BY Year, Month DESC;"
+  },
+   {
+    "intent": "nr_prioritize_this_week",
+    "question": "Which NRs should I prioritize this week?",
+    "parameters": {},
+    "sql": "SELECT * FROM ProjectRequest WHERE RequestType = 'NR' AND RequestDate >= CAST(CAST(DATEADD(DAY, -7, GETDATE()) AS DATE) AS DATETIME) ORDER BY RequestDate DESC"
+  },
+   {
+    "intent": "cr_prioritize_this_week",
+    "question": "Which CRs should I prioritize this week?",
+    "parameters": {},
+    "sql": "SELECT * FROM ProjectRequest WHERE RequestType = 'CR' AND RequestDate >= CAST(CAST(DATEADD(DAY, -7, GETDATE()) AS DATE) AS DATETIME) ORDER BY RequestDate DESC"
   },
   {
-    "question": "Have we implemented a similar CR before?",
-    "sql": "SELECT * \nFROM ProjectRequest \nWHERE CRNRStatus = 'CR'"
+    "intent": "pending_approval_gt_15_days",
+    "question": "Which CR/NR is pending for approval greater than 15 days",
+    "parameters": {},
+    "sql": "SELECT * FROM ProjectRequest WHERE (CRNRStatus like 'Pending%' OR WorkStatus like 'Pending') AND DATEDIFF(DAY, ReqCreateDate, GETDATE()) > 15"
   },
   {
-    "question": "What\u2019s our average CR turnaround time?",
-    "sql": "SELECT AVG(DATEDIFF(day, ReqRecvDate, CRNRStatusUpdatedBY)) AS AvgTurnaroundTime FROM ProjectRequest WHERE CRNRStatusUpdatedBY IS NOT NULL"
+    "intent": "status_of_cr",
+    "question": "What's the current status of CR #456?",
+    "parameters": { "cr_number": "string" },
+    "sql": "SELECT RequestCode, RequestType, Module, Brand, RequestStatus, RequestDate, EstimateHours, CRNRStatus, WorkStatus FROM ProjectRequest WHERE RequestCode = '{cr_number}'"
   },
   {
+    "intent": "similar_cr_exists",
+    "question": "Have we implemented a similar CR before like Withdrawn Product Dropdown?",
+    "parameters": { "module": "string" },
+    "sql": "SELECT * FROM ProjectRequest WHERE Module LIKE '%{module}%' AND CRNRStatus = 'Approved'"
+  },
+  {
+    "intent": "nrs_from_project",
+    "question": "Show me all NRs from a particular project?",
+    "parameters": { "project_id": "int" },
+    "sql": "SELECT * FROM ProjectRequest WHERE RequestType = 'NR' AND ProjectID = {project_id}"
+  },
+  {
+    "intent": "allocated_vs_approved_hours",
+    "question": "What is the allocated hrs and approved hrs for this CR?",
+    "parameters": { "cr_number": "string" },
+    "sql": "SELECT AllocateHours, EstimateHours FROM ProjectRequest WHERE RequestCode = '{cr_number}';"
+  },
+  {
+    "intent": "approved_same_allocated_hours",
     "question": "How many CR/NR are approved with same allocated hrs?",
-    "sql": "SELECT COUNT(*) \nFROM ProjectRequest \nWHERE CRNRStatus = 'Approved' \nAND AllocateHours IN (\n    SELECT AllocateHours \n    FROM ProjectRequest \n    GROUP BY AllocateHours \n    HAVING COUNT(*) > 1\n)"
+    "parameters": { "allocated_hours": "int" },
+    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE CRNRStatus = 'Approved' AND AllocateHours = {allocated_hours};"
+  },
+  {
+    "intent": "approved_less_than_allocated_hours",
+    "question": "How many CR/NR are approved with less than the allocated hrs?",
+    "parameters": {},
+    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE CRNRStatus = 'Approved' AND EstimateHours < AllocateHours;"
+  },
+  {
+    "intent": "delivered_last_quarter",
+    "question": "How many CRs were delivered last quarter?",
+    "parameters": {},
+    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE RequestType = 'CR' AND WorkStatus = 'Done' AND DATEPART(QUARTER, WorkActionDate) = DATEPART(QUARTER, DATEADD(QUARTER, -1, GETDATE()));"
+  },
+  {
+    "intent": "average_cr_turnaround",
+    "question": "What’s our average CR turnaround time?",
+    "parameters": {},
+    "sql": "SELECT AVG(DATEDIFF(DAY, ReqCreateDate, WorkActionDate)) AS AvgTurnaroundDays FROM ProjectRequest WHERE RequestType = 'CR';"
+  },
+  {
+    "intent": "absorbed_crnr",
+    "question": "How many CR/NR have been absorbed?",
+    "parameters": {},
+    "sql": "SELECT COUNT(*) FROM ProjectRequest WHERE CRNRStatus = 'Absorbed';"
+  },
+  {
+    "intent": "crnr_bifurcation_per_project_monthwise",
+    "question": "Give me the no of CR & NR bifurcation for each project month wise?",
+    "parameters": {},
+    "sql": "SELECT Brand, MONTH(RequestDate) AS Month, RequestType, COUNT(*) AS Count FROM ProjectRequest GROUP BY Brand, MONTH(RequestDate), RequestType ORDER BY Brand, Month;"
+  },
+  {
+    "intent": "approved_crnr_pending_po",
+    "question": "How many Approved CR & NR are pending for PO no.?",
+    "parameters": {},
+    "sql": "SELECT COUNT(*) AS PendingCount FROM ProjectRequest WHERE CRNRStatus = 'Approved' AND (PONumber IS NULL OR PONumber = '');"
+  },
+  {
+    "intent": "total_absorbed_hours_monthwise",
+    "question": "What are the total CR & NR hours that were absorbed? Break it up Month wise & Overall.",
+    "parameters": {},
+    "sql": "SELECT YEAR(RequestDate) AS Year, MONTH(RequestDate) AS Month, DATENAME(MONTH, RequestDate) AS MonthName, RequestType, SUM(AllocateHours) AS TotalAbsorbedHours FROM ProjectRequest WHERE CRNRStatus = 'Absorbed' AND RequestType IN ('CR', 'NR') GROUP BY YEAR(RequestDate), MONTH(RequestDate), DATENAME(MONTH, RequestDate), RequestType ORDER BY Year, Month, RequestType;"
+  },
+  {
+    "intent": "dropped_crnr_projectwise",
+    "question": "How many CR & NR have been rejected? Give project wise",
+    "parameters": {},
+    "sql": "SELECT Brand, COUNT(*) AS DroppedCount FROM ProjectRequest WHERE CRNRStatus = 'Rejected' GROUP BY Brand;"
+  },
+  {
+    "intent": "pending_with_delivery_project_monthwise",
+    "question": "How many CR & NR are pending with Delivery? Give Project & Month wise",
+    "parameters": {},
+    "sql": "SELECT Brand, Brand, MONTH(RequestDate) AS Month, COUNT(*) AS PendingCount FROM ProjectRequest WHERE CRNRStatus = 'Pending with Delivery' GROUP BY Brand, MONTH(RequestDate);"
+  },
+  {
+    "intent": "pending_with_business_project_monthwise",
+    "question": "How many CR & NR are pending with Business? Give Project & Month wise.",
+    "parameters": {},
+    "sql": "SELECT Brand, MONTH(RequestDate) AS Month, COUNT(*) AS PendingCount FROM ProjectRequest WHERE CRNRStatus = 'Pending with Business' GROUP BY Brand, MONTH(RequestDate);"
   }
 ]
