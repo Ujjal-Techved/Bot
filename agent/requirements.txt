@@ -1,0 +1,11 @@
+pandas
+numpy
+langchain
+langchain-ollama
+langchain-experimental
+ollama
+streamlit
+duckdb
+watchdog
+python-multipart
+pytest
