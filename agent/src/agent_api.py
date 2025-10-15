@@ -20,7 +20,6 @@ def build_agent():
       - Do NOT explain, reason, or describe.
       - ONLY return the final result (DataFrame or number or string).
       - Never include Python code or markdown in your output.
-      - If result is a DataFrame, output the table directly (no commentary).
       """
     return create_pandas_dataframe_agent(
         llm=llm,
@@ -61,7 +60,6 @@ async def query_agent(request: QueryRequest):
         # Run the agent
         question = (
             f"You are a Python data assistant. Return only the result of the pandas query, "
-            f"Answer using ONLY the pandas DataFrame result or plain text. "
             f"DO NOT include explanations, markdown, or Python code."
             f"{request.question.strip()}"
         )
