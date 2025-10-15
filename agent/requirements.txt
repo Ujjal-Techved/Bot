@@ -9,3 +9,4 @@ duckdb
 watchdog
 python-multipart
 pytest
+fastapi
