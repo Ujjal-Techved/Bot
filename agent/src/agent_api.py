@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, APIRouter
 from pydantic import BaseModel
 import pandas as pd
 from langchain_experimental.agents import create_pandas_dataframe_agent
@@ -6,6 +6,8 @@ from langchain_ollama import OllamaLLM
 from fastapi.middleware.cors import CORSMiddleware
 from src.config import OLLAMA_MODEL, VERBOSE
 from fastapi.staticfiles import StaticFiles
+import io
+import re
 
 # ✅ Load CSV once on startup
 CSV_PATH = "data/data.csv"
@@ -53,21 +55,22 @@ def root():
     return {"message": "CSV Agent API is running!"}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-@app.post("/query")
+@router.post("/query")
 async def query_agent(request: QueryRequest):
     try:
-
-        # Run the agent
+        # ---- Step 1: Format question for LLM ----
         question = (
-            f"You are a Python data assistant. Return only the result of the pandas query, "
-            f"DO NOT include explanations, markdown, or Python code."
-            f"{request.question.strip()}"
+            f"You are a Python data assistant. Return only the final pandas query result as plain text or markdown table. "
+            f"Do NOT include code or explanations.\n\n{request.question.strip()}"
         )
+
+        # ---- Step 2: Run LangChain agent ----
         result = agent.invoke({"input": question})
 
-        # Handle possible DataFrame or text output
+        # Extract the output
         output = result.get("output", result)
-        # --- Case 1: Output is a pandas DataFrame ---
+
+        # ---- Step 3: Handle clean DataFrame output ----
         if isinstance(output, pd.DataFrame):
             if output.empty:
                 return {
@@ -81,56 +84,58 @@ async def query_agent(request: QueryRequest):
                 index=False,
                 border=0,
                 classes="iris-table",
-                justify="center",
+                justify="center"
             )
-
-            message = f"Found {len(output)} rows matching your query."
             return {
                 "messages": [
                     {"sender": "user", "text": request.question},
-                    {"sender": "bot", "text": message},
                     {"sender": "bot", "isHTML": True, "text": html_table},
                 ]
             }
 
-        # --- Case 2: Output is a list of dicts (common for JSON-style data) ---
-        elif isinstance(output, list):
-            if not output:
+        # ---- Step 4: Handle markdown table output ----
+        if isinstance(output, str) and re.search(r"^\|.*\|", output, re.M):
+            try:
+                # Clean up markdown table text
+                table_text = re.sub(r"^`+|`+$", "", output.strip())
+                table_text = re.sub(r"^```[a-zA-Z]*", "", table_text)
+                table_text = re.sub(r"```$", "", table_text).strip()
+
+                # Convert markdown to DataFrame
+                df = pd.read_csv(io.StringIO(table_text), sep="|").dropna(axis=1, how="all")
+
+                # Drop empty header rows if any
+                df.columns = [c.strip() for c in df.columns]
+                df = df.loc[:, ~df.columns.str.contains("^Unnamed")]
+
+                html_table = df.to_html(
+                    index=False,
+                    border=0,
+                    classes="iris-table",
+                    justify="center"
+                )
+
                 return {
                     "messages": [
                         {"sender": "user", "text": request.question},
-                        {"sender": "bot", "text": "No results found."},
+                        {"sender": "bot", "isHTML": True, "text": html_table},
                     ]
                 }
 
-            df = pd.DataFrame(output)
-            html_table = df.to_html(index=False, border=0, classes="iris-table")
-            return {
-                "messages": [
-                    {"sender": "user", "text": request.question},
-                    {"sender": "bot", "isHTML": True, "text": html_table},
-                ]
-            }
+            except Exception as parse_err:
+                print("⚠️ Table parse failed:", parse_err)
+                pass
 
-        # --- Case 3: Output is text ---
-        else:
-            return {
-                "messages": [
-                    {"sender": "user", "text": request.question},
-                    {"sender": "bot", "text": str(output)},
-                ]
-            }
-
-    except Exception as e:
-        print("❌ Error in /query:", e)
+        # ---- Step 5: Fallback for text-only responses ----
         return {
             "messages": [
                 {"sender": "user", "text": request.question},
-                {"sender": "bot", "text": f"❌ Error: {str(e)}"},
+                {"sender": "bot", "text": str(output)},
             ]
         }
 
     except Exception as e:
+        print("❌ Error in /query:", e)
         return {
             "messages": [
                 {"sender": "user", "text": request.question},
