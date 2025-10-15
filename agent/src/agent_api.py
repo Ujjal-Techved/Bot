@@ -55,7 +55,7 @@ def root():
     return {"message": "CSV Agent API is running!"}
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-@router.post("/query")
+@app.post("/query")
 async def query_agent(request: QueryRequest):
     try:
         # ---- Step 1: Format question for LLM ----
