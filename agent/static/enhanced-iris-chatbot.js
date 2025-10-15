@@ -1280,20 +1280,27 @@
                 }
 
                 const data = await response.json();
-                const output = data.answer;
+                const messages = data.messages;
 
-                if (!output || (Array.isArray(output) && output.length === 0)) {
-                    this.addMessage('Sorry, no results were found for your query.', 'bot');
-                } else {
-                    if (typeof output === 'string' || typeof output === 'number') {
-                        this.addMessage(String(output), 'html');
-                    } else if (Array.isArray(output)) {
-                        this.addTableMessage(output);
-                    } else {
-                        this.addMessage(JSON.stringify(output, null, 2), 'bot');
-                    }
-                    this.saveQA(message, output);
+                if (Array.isArray(messages)) {
+                    messages.forEach(msg => {
+                        this.addMessage(msg.text, msg.isHTML ? 'html' : msg.sender);
+                    });
+                    return;
                 }
+
+                // if (!output || (Array.isArray(output) && output.length === 0)) {
+                //     this.addMessage('Sorry, no results were found for your query.', 'bot');
+                // } else {
+                //     if (typeof output === 'string' || typeof output === 'number') {
+                //         this.addMessage(String(output), 'html');
+                //     } else if (Array.isArray(output)) {
+                //         this.addTableMessage(output);
+                //     } else {
+                //         this.addMessage(JSON.stringify(output, null, 2), 'bot');
+                //     }
+                //     this.saveQA(message, output);
+                // }
             } catch (error) {
                 console.error('Error communicating with the bot API:', error);
                 this.addMessage("Oops! Something went wrong. Please try again later.", 'bot');

@@ -5,6 +5,7 @@ from langchain_experimental.agents import create_pandas_dataframe_agent
 from langchain_ollama import OllamaLLM
 from fastapi.middleware.cors import CORSMiddleware
 from src.config import OLLAMA_MODEL, VERBOSE
+from fastapi.staticfiles import StaticFiles
 
 # ✅ Load CSV once on startup
 CSV_PATH = "data/data.csv"
@@ -43,13 +44,13 @@ class QueryRequest(BaseModel):
 def root():
     return {"message": "CSV Agent API is running!"}
 
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.post("/query")
 async def query_agent(request: QueryRequest):
     try:
-        question = request.question.strip()
 
         # Run the agent
+        question = f"You are a Python data assistant. Return only the result of the pandas query, not explanations.\n\n{request.question.strip()}"
         result = agent.invoke({"input": question})
 
         # Handle possible DataFrame or text output

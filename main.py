@@ -71,7 +71,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def serve_index():
-    return FileResponse(os.path.join("static", "demo.html"))
+    return FileResponse(os.path.join("static", "index.html"))
 
 @app.post("/query")
 async def generate_sql_endpoint(query_input: QueryInput):
