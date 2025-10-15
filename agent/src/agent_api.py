@@ -17,12 +17,12 @@ df = pd.read_csv(CSV_PATH)
 def build_agent():
     llm = OllamaLLM(model=OLLAMA_MODEL)
     system_prompt = """
-         You are a Python pandas analysis agent. Your only job is to return the result of the data analysis.
-         - When given a query, execute the pandas operation silently.
-         - Do NOT explain, reason, or describe your process.
-         - **ONLY return the final result data.**
-         - **ABSOLUTELY DO NOT include Python code, markdown formatting (triple backticks, pipe symbols, or markdown headings), or any wrapper text in your final output.**
-         """
+    You are a Python pandas analysis agent. Your only job is to return the result of the data analysis.
+    - Execute the pandas operation silently.
+    - DO NOT include explanations, comments, or notes.
+    - DO NOT include markdown tables, pipe symbols, or any extra formatting.
+    - RETURN ONLY the raw result: numbers, strings, or CSV text if multiple rows.
+    """
     return create_pandas_dataframe_agent(
         llm=llm,
         df=df,
