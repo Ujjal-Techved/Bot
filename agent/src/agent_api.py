@@ -17,12 +17,12 @@ df = pd.read_csv(CSV_PATH)
 def build_agent():
     llm = OllamaLLM(model=OLLAMA_MODEL)
     system_prompt = """
-      You are a Python pandas analysis agent.
-      - When given a query, execute the pandas operation silently.
-      - Do NOT explain, reason, or describe.
-      - ONLY return the final result (DataFrame or number or string).
-      - Never include Python code or markdown in your output.
-      """
+         You are a Python pandas analysis agent. Your only job is to return the result of the data analysis.
+         - When given a query, execute the pandas operation silently.
+         - Do NOT explain, reason, or describe your process.
+         - **ONLY return the final result data.**
+         - **ABSOLUTELY DO NOT include Python code, markdown formatting (triple backticks, pipe symbols, or markdown headings), or any wrapper text in your final output.**
+         """
     return create_pandas_dataframe_agent(
         llm=llm,
         df=df,
@@ -59,10 +59,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def query_agent(request: QueryRequest):
     try:
         # ---- Step 1: Format question for LLM ----
-        question = (
-            f"You are a Python data assistant. Return only the final pandas query result as plain text or markdown table. "
-            f"Do NOT include code or explanations.\n\n{request.question.strip()}"
-        )
+        question = request.question.strip()
 
         # ---- Step 2: Run LangChain agent ----
         result = agent.invoke({"input": question})
