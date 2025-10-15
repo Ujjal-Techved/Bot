@@ -55,25 +55,68 @@ async def query_agent(request: QueryRequest):
 
         # Handle possible DataFrame or text output
         output = result.get("output", result)
+        # --- Case 1: Output is a pandas DataFrame ---
         if isinstance(output, pd.DataFrame):
-            # Convert to a simplified list of dicts
-            data = output.to_dict(orient="records")
-            message = f"Found {len(data)} rows matching your query."
+            if output.empty:
+                return {
+                    "messages": [
+                        {"sender": "user", "text": request.question},
+                        {"sender": "bot", "text": "No matching rows found."},
+                    ]
+                }
+
+            html_table = output.to_html(
+                index=False,
+                border=0,
+                classes="iris-table",
+                justify="center",
+            )
+
+            message = f"Found {len(output)} rows matching your query."
             return {
                 "messages": [
-                    {"sender": "user", "text": question},
+                    {"sender": "user", "text": request.question},
                     {"sender": "bot", "text": message},
-                    {"sender": "bot", "isHTML": True, "text": output.to_html(index=False)},
+                    {"sender": "bot", "isHTML": True, "text": html_table},
                 ]
             }
-        else:
-            # Text-based answer
+
+        # --- Case 2: Output is a list of dicts (common for JSON-style data) ---
+        elif isinstance(output, list):
+            if not output:
+                return {
+                    "messages": [
+                        {"sender": "user", "text": request.question},
+                        {"sender": "bot", "text": "No results found."},
+                    ]
+                }
+
+            df = pd.DataFrame(output)
+            html_table = df.to_html(index=False, border=0, classes="iris-table")
             return {
                 "messages": [
-                    {"sender": "user", "text": question},
+                    {"sender": "user", "text": request.question},
+                    {"sender": "bot", "isHTML": True, "text": html_table},
+                ]
+            }
+
+        # --- Case 3: Output is text ---
+        else:
+            return {
+                "messages": [
+                    {"sender": "user", "text": request.question},
                     {"sender": "bot", "text": str(output)},
                 ]
             }
+
+    except Exception as e:
+        print("❌ Error in /query:", e)
+        return {
+            "messages": [
+                {"sender": "user", "text": request.question},
+                {"sender": "bot", "text": f"❌ Error: {str(e)}"},
+            ]
+        }
 
     except Exception as e:
         return {
